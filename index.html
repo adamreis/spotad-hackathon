@@ -7,28 +7,50 @@ $(document).ready(function(){
     //Canvas stuff
     var canvas = $("canvas")[0];
     var ctx = canvas.getContext("2d");
-    
+    var object_colors = {0:"red", 1:"blue"};
+    var width, height, road_width, object_width;
+
     function render()
     {
-        var width = canvas.width;
-        var height = canvas.height;
+        width = canvas.width;
+        height = canvas.height;
         if (height < width) {
             width = height;
         }
+        road_width = width/2;
+        object_width = 10/48 * road_width;
         // background
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, width, height);
         ctx.strokeStyle = "black";
         ctx.strokeRect(0, 0, width, height);
         ctx.strokeRect(width/2, 0, 0, height);
+
+
+        render_car(0, 0, 0);
+        render_car(0, 1, 0);
+        render_car(1, 0, 0);
+        render_car(1, 1, 0);
     }
-    render_obstacle(x, y) {
+
+    // render_obstacle(0/1, 0/1, 0-1, 'blue')
+    function render_obstacle(track, column, y_proportion) {
+
     }
-    render_target(x, y) {
+    function render_target(track, column, y_proportion) {
+
     }
-    render_car(x, y, heading) {
+    function render_car(track, column, heading) {
+        x = track * road_width + column * road_width/2;
+        x += 7/24 * road_width/2;
+        y = .85 * height;
+
+        ctx.fillStyle = object_colors[track];
+        ctx.fillRect(x, y, object_width, object_width*1.7);
     }
+
     render();
+    
 });
         </script>
         <style type="text/css">
