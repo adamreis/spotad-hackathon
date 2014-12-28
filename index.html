@@ -269,21 +269,21 @@ $(document).ready(function(){
         return track * road_width + column * road_width/2 + 7/24 * road_width/2;
     }
 
-    // $(canvas).click(function(e) {
-    //     var i;
-    //     if (e.offsetX < road_width) {
-    //         i = 0;
-    //     } else if (e.offsetX < 2 * road_width) {
-    //         i = 1;
-    //     } else {
-    //         return;
-    //     }
-    //     if (cars[i]["intended_x"]) {
-    //         cars[i]["intended_x"] = 0;
-    //     } else {
-    //         cars[i]["intended_x"] = 1;
-    //     }
-    // });
+    $(canvas).click(function(e) {
+        var i;
+        if (e.offsetX < road_width) {
+            i = 0;
+        } else if (e.offsetX < 2 * road_width) {
+            i = 1;
+        } else {
+            return;
+        }
+        if (cars[i]["intended_x"]) {
+            cars[i]["intended_x"] = 0;
+        } else {
+            cars[i]["intended_x"] = 1;
+        }
+    });
     
     document.addEventListener('touchstart', function(event) {
         var i;
