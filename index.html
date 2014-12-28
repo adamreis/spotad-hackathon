@@ -99,12 +99,16 @@ $(document).ready(function(){
         y = height * y_proportion - object_width / 2;
 
         // outer rectangle
-        roundRect(ctx, x, y, object_width, object_width, object_width / 4, object_colors[track], null)
+        ctx.fillStyle = object_colors[track];
+        roundRect(ctx, x, y, object_width, object_width, object_width / 4, true, false);
+
 
         // inner rectangle
         x += object_width / 4;
         y += object_width / 4;
-        roundRect(ctx, x, y, object_width/2, object_width/2, object_width/16, null, "white")        
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 5;
+        roundRect(ctx, x, y, object_width/2, object_width/2, object_width/16, false, true)        
 
     }
     function render_target(track, column, y_proportion) {
