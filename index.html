@@ -54,7 +54,7 @@ $(document).ready(function(){
     }
 
     function update() {
-        var min_y = -Infinity;
+        var min_y = Infinity;
         _.each(obstacles, function(obstacle) {
             update_y_proportion(obstacle);
             min_y = Math.min(min_y, obstacle.y_proportion);
@@ -80,9 +80,6 @@ $(document).ready(function(){
         // background
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, width, height);
-        ctx.strokeStyle = "black";
-        ctx.strokeRect(0, 0, width, height);
-        ctx.strokeRect(width/2, 0, 0, height);
 
         _.each(obstacles, function(obstacle) {
             render_obstacle(0, obstacle.column, obstacle.y_proportion);
@@ -91,6 +88,11 @@ $(document).ready(function(){
             render_target(0, target.column, target.y_proportion);
         });
         render_car(0, car_proportion, 1);
+
+        // frame
+        ctx.strokeStyle = "black";
+        ctx.strokeRect(0, 0, width, height);
+        ctx.strokeRect(width/2, 0, 0, height);
     }
 
     // render_obstacle(0/1, 0/1, 0-1, 'blue')
@@ -145,6 +147,13 @@ $(document).ready(function(){
         if (car_proportion) {
             car_proportion = 0;
         } else {
+            car_proportion = 1;
+        }
+    });
+    $(document).keydown(function(e) {
+        if (e.which == 37) {
+            car_proportion = 0;
+        } else if (e.which == 39) {
             car_proportion = 1;
         }
     });
