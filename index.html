@@ -165,7 +165,7 @@ $(document).ready(function(){
                 ctx.font = "16px Arial";
                 ctx.fillText("Click to restart", width / 2, height * 1.1 / 2);
                 var restart = _.once(init);
-                $(document).one('click keydown', restart);
+                $(document).one('click keydown touchstart', restart);
             }, 1000);
         }
     }
