@@ -17,16 +17,16 @@ $(document).ready(function(){
     //     column: an interger 0 or 1 indicating which track it's on
     //     y_proportion: a float in [0, 1] indicating the y position of the object.  0 is the top.
     // }
-    // car_proportion is a float in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
+    // car_columns is an array of 2 floats in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
     // speed is in units of screens per second
-    var obstacles, targets, car_proportion, speed, min_distance_between_objects, obstacles_per_second, targets_per_second;
+    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second;
 
     var update_ms = 16;
 
     function init() {
         obstacles = [];
         targets = [];
-        car_proportion = 0;
+        car_columns = [0, 1];
         speed = 0.4;
         min_distance_between_objects = 0.1;
         generate_object();
@@ -90,7 +90,7 @@ $(document).ready(function(){
         _.each(targets, function(target) {
             render_target(0, target.column, target.y_proportion);
         });
-        render_car(0, car_proportion, 1);
+        render_cars();
     }
 
     // render_obstacle(0/1, 0/1, 0-1, 'blue')
@@ -129,6 +129,11 @@ $(document).ready(function(){
         ctx.arc(x, y, object_width/4, 0, 2 * Math.PI);
         ctx.stroke();
     }
+    function render_cars() {
+        render_car(0, car_columns[0], 1);
+        render_car(1, car_columns[1], 1);
+    }
+
     function render_car(track, column, heading) {
         x = x_val_for_track_and_column(track, column);
         y = .85 * height;
@@ -142,10 +147,12 @@ $(document).ready(function(){
     }
 
     $(document).click(function() {
-        if (car_proportion) {
-            car_proportion = 0;
-        } else {
-            car_proportion = 1;
+        for (i in [0,1]) {
+            if (car_columns[i]) {
+                car_columns[i] = 0;
+            } else {
+                car_columns[i] = 1;
+            }    
         }
     });
 
