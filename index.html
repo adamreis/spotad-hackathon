@@ -20,11 +20,12 @@ $(document).ready(function(){
     // }
     // car_columns is an array of 2 floats in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
     // speed is in units of screens per second
-    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, loop, collision, accel;
+    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, loop, collision, accel, score;
 
     var update_ms = 16;
 
     function init() {
+        score = 0;
         obstacles = [];
         targets = [];
         car_columns = [0, 1];
@@ -97,8 +98,8 @@ $(document).ready(function(){
 
             var d = distance(car_x, car_y, target_x, target_y) 
             if ( d < object_width/2 - 5){
+                score++;
                 return false;
-                // console.log('hit target!')
             }
             return true;
         });
@@ -146,6 +147,8 @@ $(document).ready(function(){
         if (collision) {
             clearInterval(loop);
         }
+        var score_text = "Score: " + score;
+        ctx.fillText(score_text, 5, 15);
     }
 
     // render_obstacle(0/1, 0/1, 0-1, 'blue')
