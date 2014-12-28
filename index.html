@@ -10,6 +10,7 @@ $(document).ready(function(){
     var ctx = canvas.getContext("2d");
     var object_colors = {0:"red", 1:"blue"};
     var width, height, road_width, object_width;
+    var car_prop = 0.85;
 
     // game state
     // obstacles and states have the same structure:
@@ -19,7 +20,7 @@ $(document).ready(function(){
     // }
     // car_columns is an array of 2 floats in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
     // speed is in units of screens per second
-    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second;
+    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, loop, collision;
 
     var update_ms = 16;
 
@@ -30,7 +31,7 @@ $(document).ready(function(){
         speed = 0.4;
         min_distance_between_objects = 0.1;
         generate_object();
-        var loop;
+        collision = false;
         if (typeof loop === "undefined") {
             clearInterval(loop);
         }
@@ -39,6 +40,7 @@ $(document).ready(function(){
 
     function generate_object() {
         var obj = {
+            track: Math.floor(Math.random() * 2),
             column: Math.floor(Math.random() * 2),
             y_proportion: 0
         };
@@ -66,8 +68,46 @@ $(document).ready(function(){
         if (min_y > 0.5) {
             generate_object();
         }
+
+        collision = false;
+        _.each(obstacles, function(obstacle) {
+            var car_x = car_columns[obstacle.track] * width / 4;
+            var car_y = car_prop * height;
+            var obstacle_x = obstacle.column * width / 4;
+            var obstacle_y = obstacle.y_proportion * height;
+
+            var d = distance(car_x, car_y, obstacle_x, obstacle_y) 
+            if ( d < object_width/2){
+                collision = true;
+            }
+        });
+
+        targets = _.filter(targets, function(target) {
+            var car_x = car_columns[target.track] * width / 4;
+            var car_y = car_prop * height;
+            var target_x = target.column * width / 4;
+            var target_y = target.y_proportion * height;
+
+            var d = distance(car_x, car_y, target_x, target_y) 
+            if ( d < object_width/2 - 5){
+                return false;
+                // console.log('hit target!')
+            }
+            return true;
+        });
+
+        _.each(targets, function(target) {
+
+            var target_y = target.y_proportion * height;
+
+            if (height - target_y <= object_width/2) {
+                collision = true;
+            }
+        });
+
+
     }
-    
+
     function render()
     {
         width = canvas.width;
@@ -82,10 +122,10 @@ $(document).ready(function(){
         ctx.fillRect(0, 0, width, height);
 
         _.each(obstacles, function(obstacle) {
-            render_obstacle(0, obstacle.column, obstacle.y_proportion);
+            render_obstacle(obstacle.track, obstacle.column, obstacle.y_proportion);
         });
         _.each(targets, function(target) {
-            render_target(0, target.column, target.y_proportion);
+            render_target(target.track, target.column, target.y_proportion);
         });
 
         render_cars();
@@ -95,6 +135,9 @@ $(document).ready(function(){
         ctx.strokeRect(0, 0, width, height);
         ctx.strokeRect(width/2, 0, 0, height);
 
+        if (collision) {
+            clearInterval(loop);
+        }
     }
 
     // render_obstacle(0/1, 0/1, 0-1, 'blue')
@@ -140,7 +183,7 @@ $(document).ready(function(){
 
     function render_car(track, column, heading) {
         x = x_val_for_track_and_column(track, column);
-        y = .85 * height;
+        y = car_prop * height;
 
         ctx.fillStyle = object_colors[track];
         ctx.fillRect(x, y, object_width, object_width*1.7);
@@ -212,6 +255,10 @@ $(document).ready(function(){
       if (fill) {
         ctx.fill();
       }        
+    }
+
+    function distance(x1, y1, x2, y2) {
+        return Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
     }
 });
         </script>
