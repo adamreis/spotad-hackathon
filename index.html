@@ -16,15 +16,19 @@ $(document).ready(function(){
     //     column: an interger 0 or 1 indicating which track it's on
     //     y_proportion: a float in [0, 1] indicating the y position of the object.  0 is the top.
     // }
-    var obstacles = [];
-    var targets = [];
     // car_proportion is a float in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
-    var car_proportion = 0;
-    var speed = 0.4; // Units: screens per second
+    // speed is in units of screens per second
+    var obstacles, targets, car_proportion, speed, min_distance_between_objects, obstacles_per_second, targets_per_second;
 
     var update_ms = 16;
 
     function init() {
+        obstacles = [];
+        targets = [];
+        car_proportion = 0;
+        speed = 0.4;
+        min_distance_between_objects = 0.1;
+        generate_object();
         var loop;
         if (typeof loop === "undefined") {
             clearInterval(loop);
@@ -32,16 +36,34 @@ $(document).ready(function(){
         loop = setInterval(function() {update(); render();}, update_ms);
     }
 
+    function generate_object() {
+        var obj = {
+            column: Math.floor(Math.random() * 2),
+            y_proportion: 0
+        };
+        if (Math.floor(Math.random() * 2)) {
+            obstacles.push(obj);
+        } else {
+            targets.push(obj);
+        }
+    }
+
     function update_y_proportion(obj) {
         obj.y_proportion += speed * update_ms / 1000;
     }
 
     function update() {
+        var min_y = -Infinity;
         for (var obstacle in obstacles) {
             update_y_proportion(obstacle);
+            min_y = Math.min(min_y, obstacle.y_proportion);
         }
         for (var target in targets) {
             update_y_proportion(target);
+            min_y = Math.min(min_y, target.y_proportion);
+        }
+        if (min_y > 0.5) {
+            generate_object();
         }
     }
     
@@ -61,13 +83,6 @@ $(document).ready(function(){
         ctx.strokeRect(0, 0, width, height);
         ctx.strokeRect(width/2, 0, 0, height);
 
-
-        render_car(0, 0, 0);
-        render_car(0, 1, 0);
-        render_car(1, 0, 0);
-        render_car(1, 1, 0);
-        render_target(0, 0, .5);
-        render_obstacle(0, 1, .5);
         for (var obstacle in obstacles) {
             render_obstacle(0, obstacle.column, obstacle.y_proportion);
         }
