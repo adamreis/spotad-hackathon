@@ -190,7 +190,8 @@ $(document).ready(function(){
             clearInterval(loop);
         }
         var score_text = "Score: " + score;
-        ctx.fillText(score_text, 5, 15);
+        ctx.font = "16px Arial";
+        ctx.fillText(score_text, 10, 25);
     }
 
     // render_obstacle(0/1, 0/1, 0-1, 'blue')
