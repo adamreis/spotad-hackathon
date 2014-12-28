@@ -26,7 +26,7 @@ $(document).ready(function(){
     //Canvas stuff
     var canvas = $("canvas")[0];
     var ctx = canvas.getContext("2d");
-    var object_colors = {0:"red", 1:"blue"};
+    var object_colors = {0:"Crimson", 1:"DeepSkyBlue"};
     var width, height, road_width, object_width;
     var car_prop = 0.85;
 
@@ -169,8 +169,15 @@ $(document).ready(function(){
         road_width = width/2;
         object_width = 10/48 * road_width;
         // background
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "MidnightBlue";
         ctx.fillRect(0, 0, width, height);
+
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "MediumSlateBlue";
+
+        ctx.strokeRect(width/4, 0, 0, height);
+        ctx.strokeRect(3*width/4, 0, 0, height);
 
         _.each(obstacles, function(obstacle) {
             render_obstacle(obstacle.track, obstacle.column, obstacle.y_proportion);
@@ -182,9 +189,13 @@ $(document).ready(function(){
         render_cars();
 
         // frame
-        ctx.strokeStyle = "black";
-        ctx.strokeRect(0, 0, width, height);
+        ctx.strokeStyle = "MediumSlateBlue";
         ctx.strokeRect(width/2, 0, 0, height);
+        ctx.strokeStyle = "Black";
+        ctx.strokeRect(0, 0, width, height);
+        
+
+        
 
         if (collision) {
             clearInterval(loop);
