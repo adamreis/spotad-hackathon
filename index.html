@@ -10,6 +10,41 @@ $(document).ready(function(){
     var object_colors = {0:"red", 1:"blue"};
     var width, height, road_width, object_width;
 
+    // game state
+    // obstacles and states have the same structure:
+    // {
+    //     column: an interger 0 or 1 indicating which track it's on
+    //     y_proportion: a float in [0, 1] indicating the y position of the object.  0 is the top.
+    // }
+    var obstacles = [];
+    var targets = [];
+    // car_proportion is a float in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
+    var car_proportion = 0;
+    var speed = 0.4; // Units: screens per second
+
+    var update_ms = 16;
+
+    function init() {
+        var loop;
+        if (typeof loop === "undefined") {
+            clearInterval(loop);
+        }
+        loop = setInterval(function() {update(); render();}, update_ms);
+    }
+
+    function update_y_proportion(obj) {
+        obj.y_proportion += speed * update_ms / 1000;
+    }
+
+    function update() {
+        for (var obstacle in obstacles) {
+            update_y_proportion(obstacle);
+        }
+        for (var target in targets) {
+            update_y_proportion(target);
+        }
+    }
+    
     function render()
     {
         width = canvas.width;
@@ -31,6 +66,13 @@ $(document).ready(function(){
         render_car(0, 1, 0);
         render_car(1, 0, 0);
         render_car(1, 1, 0);
+        for (var obstacle in obstacles) {
+            render_obstacle(0, obstacle.column, obstacle.y_proportion);
+        }
+        for (var target in targets) {
+            render_target(0, target.column, target.y_proportion);
+        }
+        render_car(0, car_proportion, 1);
     }
 
     // render_obstacle(0/1, 0/1, 0-1, 'blue')
@@ -49,8 +91,15 @@ $(document).ready(function(){
         ctx.fillRect(x, y, object_width, object_width*1.7);
     }
 
-    render();
+    $(document).click(function() {
+        if (car_proportion) {
+            car_proportion = 0;
+        } else {
+            car_proportion = 1;
+        }
+    });
     
+    init();
 });
         </script>
         <style type="text/css">
