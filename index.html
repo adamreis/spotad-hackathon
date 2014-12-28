@@ -29,20 +29,23 @@ $(document).ready(function(){
         targets = [];
         car_columns = [0, 1];
         speed = 0.4;
-        min_distance_between_objects = 0.1;
-        generate_object();
         collision = false;
+        min_distance_between_objects = 0.3;
+        objects_per_second = 0.8;
+        generate_object(0);
+        generate_object(1);
+
         if (typeof loop === "undefined") {
             clearInterval(loop);
         }
         loop = setInterval(function() {update(); render();}, update_ms);
     }
 
-    function generate_object() {
+    function generate_object(track) {
         var obj = {
-            track: Math.floor(Math.random() * 2),
+            track: track,
             column: Math.floor(Math.random() * 2),
-            y_proportion: 0
+            y_proportion: -(Math.random() * 2 * (speed / objects_per_second - min_distance_between_objects) + min_distance_between_objects)
         };
         if (Math.floor(Math.random() * 2)) {
             obstacles.push(obj);
@@ -56,17 +59,20 @@ $(document).ready(function(){
     }
 
     function update() {
-        var min_y = Infinity;
+        var min_y = [Infinity, Infinity];
         _.each(obstacles, function(obstacle) {
             update_y_proportion(obstacle);
-            min_y = Math.min(min_y, obstacle.y_proportion);
+            min_y[obstacle.track] = Math.min(min_y[obstacle.track], obstacle.y_proportion);
         });
         _.each(targets, function(target) {
             update_y_proportion(target);
-            min_y = Math.min(min_y, target.y_proportion);
+            min_y[target.track] = Math.min(min_y[target.track], target.y_proportion);
         });
-        if (min_y > 0.5) {
-            generate_object();
+        if (min_y[0] > 0) {
+            generate_object(0);
+        }
+        if (min_y[1] > 0) {
+            generate_object(1);
         }
 
         collision = false;
@@ -155,7 +161,7 @@ $(document).ready(function(){
         y += object_width / 4;
         ctx.strokeStyle = "white";
         ctx.lineWidth = 5;
-        roundRect(ctx, x, y, object_width/2, object_width/2, object_width/16, false, true)        
+        roundRect(ctx, x, y, object_width/2, object_width/2, object_width/16, false, true)
 
     }
     function render_target(track, column, y_proportion) {
@@ -193,39 +199,48 @@ $(document).ready(function(){
         return track * road_width + column * road_width/2 + 7/24 * road_width/2;
     }
 
-    $(document).click(function() {
-        for (i in [0,1]) {
-            if (car_columns[i]) {
-                car_columns[i] = 0;
-            } else {
-                car_columns[i] = 1;
-            }    
+    $(canvas).click(function(e) {
+        var i;
+        if (e.offsetX < road_width) {
+            i = 0;
+        } else if (e.offsetX < 2 * road_width) {
+            i = 1;
+        } else {
+            return;
+        }
+        if (car_columns[i]) {
+            car_columns[i] = 0;
+        } else {
+            car_columns[i] = 1;
         }
     });
     $(document).keydown(function(e) {
-        if (e.which == 37) {
+        var i;
+        if (_.contains([37, 70], e.which)) {
             i = 0;
-        } else if (e.which == 39) {
+        } else if (_.contains([39, 74], e.which)) {
             i = 1;
+        } else {
+            return;
         }
 
         if (car_columns[i]) {
             car_columns[i] = 0;
         } else {
             car_columns[i] = 1;
-        }   
+        }
     });
 
     init();
 
     /**
-     * Draws a rounded rectangle using the current state of the canvas. 
-     * If you omit the last three params, it will draw a rectangle 
-     * outline with a 5 pixel border radius 
+     * Draws a rounded rectangle using the current state of the canvas.
+     * If you omit the last three params, it will draw a rectangle
+     * outline with a 5 pixel border radius
      * @param {CanvasRenderingContext2D} ctx
      * @param {Number} x The top left x coordinate
-     * @param {Number} y The top left y coordinate 
-     * @param {Number} width The width of the rectangle 
+     * @param {Number} y The top left y coordinate
+     * @param {Number} width The width of the rectangle
      * @param {Number} height The height of the rectangle
      * @param {Number} radius The corner radius. Defaults to 5;
      * @param {Boolean} fill Whether to fill the rectangle. Defaults to false.
@@ -254,7 +269,7 @@ $(document).ready(function(){
       }
       if (fill) {
         ctx.fill();
-      }        
+      }
     }
 
     function distance(x1, y1, x2, y2) {
