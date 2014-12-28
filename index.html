@@ -51,7 +51,7 @@ $(document).ready(function(){
         collision = false;
         accel = 0.01
         min_distance_between_objects = 0.3;
-        objects_per_second = 0.8;
+        tracks_per_object = .6;
         generate_object(0);
         generate_object(1);
 
@@ -65,7 +65,7 @@ $(document).ready(function(){
         var obj = {
             track: track,
             column: Math.floor(Math.random() * 2),
-            y_proportion: -(Math.random() * 2 * (speed / objects_per_second - min_distance_between_objects) + min_distance_between_objects)
+            y_proportion: -(Math.random() * 2 * (tracks_per_object - min_distance_between_objects) + min_distance_between_objects)
         };
         if (Math.floor(Math.random() * 2)) {
             obstacles.push(obj);
