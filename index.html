@@ -19,7 +19,7 @@ $(document).ready(function(){
     // }
     // car_columns is an array of 2 floats in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
     // speed is in units of screens per second
-    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second;
+    var obstacles, targets, car_columns, speed, min_distance_between_objects, objects_per_second;
 
     var update_ms = 16;
 
@@ -28,8 +28,10 @@ $(document).ready(function(){
         targets = [];
         car_columns = [0, 1];
         speed = 0.4;
-        min_distance_between_objects = 0.1;
-        generate_object();
+        min_distance_between_objects = 0.3;
+        objects_per_second = 0.8;
+        generate_object(0);
+        generate_object(1);
         var loop;
         if (typeof loop === "undefined") {
             clearInterval(loop);
@@ -37,11 +39,11 @@ $(document).ready(function(){
         loop = setInterval(function() {update(); render();}, update_ms);
     }
 
-    function generate_object() {
+    function generate_object(track) {
         var obj = {
-            track: Math.floor(Math.random() * 2),
+            track: track,
             column: Math.floor(Math.random() * 2),
-            y_proportion: 0
+            y_proportion: -(Math.random() * 2 * (speed / objects_per_second - min_distance_between_objects) + min_distance_between_objects)
         };
         if (Math.floor(Math.random() * 2)) {
             obstacles.push(obj);
@@ -55,17 +57,20 @@ $(document).ready(function(){
     }
 
     function update() {
-        var min_y = Infinity;
+        var min_y = [Infinity, Infinity];
         _.each(obstacles, function(obstacle) {
             update_y_proportion(obstacle);
-            min_y = Math.min(min_y, obstacle.y_proportion);
+            min_y[obstacle.track] = Math.min(min_y[obstacle.track], obstacle.y_proportion);
         });
         _.each(targets, function(target) {
             update_y_proportion(target);
-            min_y = Math.min(min_y, target.y_proportion);
+            min_y[target.track] = Math.min(min_y[target.track], target.y_proportion);
         });
-        if (min_y > 0.5) {
-            generate_object();
+        if (min_y[0] > 0) {
+            generate_object(0);
+        }
+        if (min_y[1] > 0) {
+            generate_object(1);
         }
     }
 
