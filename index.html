@@ -20,7 +20,7 @@ $(document).ready(function(){
     // }
     // car_columns is an array of 2 floats in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
     // speed is in units of screens per second
-    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, loop, collision;
+    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, loop, collision, accel;
 
     var update_ms = 16;
 
@@ -30,6 +30,7 @@ $(document).ready(function(){
         car_columns = [0, 1];
         speed = 0.4;
         collision = false;
+        accel = 0.01
         min_distance_between_objects = 0.3;
         objects_per_second = 0.8;
         generate_object(0);
@@ -112,6 +113,7 @@ $(document).ready(function(){
         });
 
 
+        speed += accel * update_ms / 1000;
     }
 
     function render()
