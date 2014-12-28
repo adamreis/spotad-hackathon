@@ -269,41 +269,45 @@ $(document).ready(function(){
         return track * road_width + column * road_width/2 + 7/24 * road_width/2;
     }
 
-    $(canvas).click(function(e) {
-        var i;
-        if (e.offsetX < road_width) {
-            i = 0;
-        } else if (e.offsetX < 2 * road_width) {
-            i = 1;
-        } else {
-            return;
-        }
-        if (cars[i]["intended_x"]) {
-            cars[i]["intended_x"] = 0;
-        } else {
-            cars[i]["intended_x"] = 1;
-        }
-    });
     
-    document.addEventListener('touchstart', function(event) {
-        var i;
-        var touch = event.touches[0];
-
-        if (touch.pageX < road_width) {
-            i = 0;
-        } else if (touch.pageX < 2 * road_width) {
-            i = 1;
-        } else {
-            return;
-        }
-        if (cars[i]["intended_x"]) {
-            cars[i]["intended_x"] = 0;
-        } else {
-            cars[i]["intended_x"] = 1;
-        }
-
-    }, false);
     
+    if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+        document.addEventListener('touchstart', function(event) {
+            var i;
+            var touch = event.touches[0];
+
+            if (touch.pageX < road_width) {
+                i = 0;
+            } else if (touch.pageX < 2 * road_width) {
+                i = 1;
+            } else {
+                return;
+            }
+            if (cars[i]["intended_x"]) {
+                cars[i]["intended_x"] = 0;
+            } else {
+                cars[i]["intended_x"] = 1;
+            }
+
+        }, false);
+    } else {
+        $(canvas).click(function(e) {
+            var i;
+            if (e.offsetX < road_width) {
+                i = 0;
+            } else if (e.offsetX < 2 * road_width) {
+                i = 1;
+            } else {
+                return;
+            }
+            if (cars[i]["intended_x"]) {
+                cars[i]["intended_x"] = 0;
+            } else {
+                cars[i]["intended_x"] = 1;
+            }
+        });
+    }
+        
     $(document).keydown(function(e) {
         var i;
         if (_.contains([37, 70], e.which)) {
