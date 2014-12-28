@@ -16,7 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 -->
 
-
 <!doctype html>
 <html>
     <head>
@@ -27,7 +26,7 @@ $(document).ready(function(){
     //Canvas stuff
     var canvas = $("canvas")[0];
     var ctx = canvas.getContext("2d");
-    var object_colors = {0:"red", 1:"blue"};
+    var object_colors = {0:"Crimson", 1:"DeepSkyBlue"};
     var width, height, road_width, object_width;
     var car_prop = 0.85;
 
@@ -37,9 +36,9 @@ $(document).ready(function(){
     //     column: an interger 0 or 1 indicating which track it's on
     //     y_proportion: a float in [0, 1] indicating the y position of the object.  0 is the top.
     // }
-    // car_columns is an array of 2 floats in [0, 1], where 0 represents being in the left track and 1 represents being in the right track.
+    // cars is an array of 2 car objects
     // speed is in units of screens per second
-    var obstacles, targets, car_columns, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, loop, collision, accel, score;
+    var obstacles, targets, cars, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, loop, collision, accel, score;
 
     var update_ms = 16;
 
@@ -47,12 +46,12 @@ $(document).ready(function(){
         score = 0;
         obstacles = [];
         targets = [];
-        car_columns = [0, 1];
+        cars = [{"cur_x":0, "intended_x":0}, {"cur_x":1, "intended_x":1}];
         speed = 0.4;
         collision = false;
         accel = 0.01
         min_distance_between_objects = 0.3;
-        objects_per_second = 0.8;
+        tracks_per_object = .6;
         generate_object(0);
         generate_object(1);
 
@@ -66,7 +65,7 @@ $(document).ready(function(){
         var obj = {
             track: track,
             column: Math.floor(Math.random() * 2),
-            y_proportion: -(Math.random() * 2 * (speed / objects_per_second - min_distance_between_objects) + min_distance_between_objects)
+            y_proportion: -(Math.random() * 2 * (tracks_per_object - min_distance_between_objects) + min_distance_between_objects)
         };
         if (Math.floor(Math.random() * 2)) {
             obstacles.push(obj);
@@ -79,6 +78,27 @@ $(document).ready(function(){
         obj.y_proportion += speed * update_ms / 1000;
     }
 
+    function update_car_position(car) {
+        var cur_x = car["cur_x"];
+        var intended_x = car["intended_x"];
+
+        d = Math.abs(cur_x - intended_x);
+        var update_d;
+
+        if (d < update_ms / 10) {
+            update_d = d / 5;
+        } else {
+            update_d = update_ms / 100;
+        }
+
+
+        if (intended_x > cur_x) {
+            car["cur_x"] += update_d;
+        } else {
+            car["cur_x"] -= update_d;
+        }
+    }
+
     function update() {
         var min_y = [Infinity, Infinity];
         _.each(obstacles, function(obstacle) {
@@ -89,6 +109,9 @@ $(document).ready(function(){
             update_y_proportion(target);
             min_y[target.track] = Math.min(min_y[target.track], target.y_proportion);
         });
+        _.each(cars, function(car) {
+            update_car_position(car);
+        })
         if (min_y[0] > 0) {
             generate_object(0);
         }
@@ -98,7 +121,7 @@ $(document).ready(function(){
 
         collision = false;
         _.each(obstacles, function(obstacle) {
-            var car_x = car_columns[obstacle.track] * width / 4;
+            var car_x = cars[obstacle.track]["cur_x"] * width / 4;
             var car_y = car_prop * height;
             var obstacle_x = obstacle.column * width / 4;
             var obstacle_y = obstacle.y_proportion * height;
@@ -110,7 +133,7 @@ $(document).ready(function(){
         });
 
         targets = _.filter(targets, function(target) {
-            var car_x = car_columns[target.track] * width / 4;
+            var car_x = cars[target.track]["cur_x"] * width / 4;
             var car_y = car_prop * height;
             var target_x = target.column * width / 4;
             var target_y = target.y_proportion * height;
@@ -146,8 +169,15 @@ $(document).ready(function(){
         road_width = width/2;
         object_width = 10/48 * road_width;
         // background
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "MidnightBlue";
         ctx.fillRect(0, 0, width, height);
+
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "MediumSlateBlue";
+
+        ctx.strokeRect(width/4, 0, 0, height);
+        ctx.strokeRect(3*width/4, 0, 0, height);
 
         _.each(obstacles, function(obstacle) {
             render_obstacle(obstacle.track, obstacle.column, obstacle.y_proportion);
@@ -159,15 +189,20 @@ $(document).ready(function(){
         render_cars();
 
         // frame
-        ctx.strokeStyle = "black";
-        ctx.strokeRect(0, 0, width, height);
+        ctx.strokeStyle = "MediumSlateBlue";
         ctx.strokeRect(width/2, 0, 0, height);
+        ctx.strokeStyle = "Black";
+        ctx.strokeRect(0, 0, width, height);
+        
+
+        
 
         if (collision) {
             clearInterval(loop);
         }
         var score_text = "Score: " + score;
-        ctx.fillText(score_text, 5, 15);
+        ctx.font = "16px Arial";
+        ctx.fillText(score_text, 10, 25);
     }
 
     // render_obstacle(0/1, 0/1, 0-1, 'blue')
@@ -207,8 +242,8 @@ $(document).ready(function(){
         ctx.stroke();
     }
     function render_cars() {
-        render_car(0, car_columns[0], 1);
-        render_car(1, car_columns[1], 1);
+        render_car(0, cars[0]["cur_x"], 1);
+        render_car(1, cars[1]["cur_x"], 1);
     }
 
     function render_car(track, column, heading) {
@@ -232,10 +267,10 @@ $(document).ready(function(){
         } else {
             return;
         }
-        if (car_columns[i]) {
-            car_columns[i] = 0;
+        if (cars[i]["intended_x"]) {
+            cars[i]["intended_x"] = 0;
         } else {
-            car_columns[i] = 1;
+            cars[i]["intended_x"] = 1;
         }
     });
     $(document).keydown(function(e) {
@@ -248,10 +283,10 @@ $(document).ready(function(){
             return;
         }
 
-        if (car_columns[i]) {
-            car_columns[i] = 0;
+        if (cars[i]["intended_x"]) {
+            cars[i]["intended_x"] = 0;
         } else {
-            car_columns[i] = 1;
+            cars[i]["intended_x"] = 1;
         }
     });
 
