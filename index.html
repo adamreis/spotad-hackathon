@@ -59,7 +59,7 @@ $(document).ready(function(){
         if (typeof loop === "undefined") {
             clearInterval(loop);
         }
-        loop = setInterval(function() {render();}, update_ms);
+        loop = setInterval(function() {update(); render();}, update_ms);
     }
 
     function generate_object(track) {
@@ -172,7 +172,6 @@ $(document).ready(function(){
 
     function render()
     {
-        update();
         width = canvas.width;
         height = canvas.height;
         if (height < width) {
