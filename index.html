@@ -29,7 +29,7 @@ $(document).ready(function(){
     var ctx = canvas.getContext("2d");
     var object_colors = {0:"Crimson", 1:"DeepSkyBlue"};
     var width, height, road_width, object_width;
-    var car_prop = 0.85;
+    var car_prop = 0.8;
 
     // game state
     // obstacles and states have the same structure:
@@ -59,7 +59,7 @@ $(document).ready(function(){
         if (typeof loop === "undefined") {
             clearInterval(loop);
         }
-        loop = setInterval(function() {update(); render();}, update_ms);
+        loop = setInterval(function() {render();}, update_ms);
     }
 
     function generate_object(track) {
@@ -172,6 +172,7 @@ $(document).ready(function(){
 
     function render()
     {
+        update();
         width = canvas.width;
         height = canvas.height;
         if (height < width) {
@@ -220,7 +221,27 @@ $(document).ready(function(){
         }
     }
 
-    // render_obstacle(0/1, 0/1, 0-1, 'blue')
+    function render_cars() {
+        render_car(0, cars[0]["cur_x"], 1);
+        render_car(1, cars[1]["cur_x"], 1);
+    }
+
+    function render_car(track, column, heading) {
+        x = x_val_for_track_and_column(track, column);
+        y = car_prop * height;
+
+        // outer rectangle
+        ctx.fillStyle = object_colors[track];
+        roundRect(ctx, x, y, object_width, object_width*1.7, object_width / 3, true, false);
+
+        // inner rectangle
+        ctx.fillStyle = "white"
+        var new_x = x + object_width / 4;
+        var new_y = y + object_width / 4;
+        roundRect(ctx, new_x, new_y, object_width/2, object_width*1.25, object_width / 8, true, false);
+    }
+
+
     function render_obstacle(track, column, y_proportion) {
         x = x_val_for_track_and_column(track, column);
         y = height * y_proportion - object_width / 2;
@@ -253,21 +274,10 @@ $(document).ready(function(){
         ctx.beginPath()
         ctx.strokeStyle = "white";
         ctx.lineWidth = 5;
-        ctx.arc(x, y, object_width/4, 0, 2 * Math.PI);
+        ctx.arc(x, y, 0.3 * object_width, 0, 2 * Math.PI);
         ctx.stroke();
     }
-    function render_cars() {
-        render_car(0, cars[0]["cur_x"], 1);
-        render_car(1, cars[1]["cur_x"], 1);
-    }
-
-    function render_car(track, column, heading) {
-        x = x_val_for_track_and_column(track, column);
-        y = car_prop * height;
-
-        ctx.fillStyle = object_colors[track];
-        ctx.fillRect(x, y, object_width, object_width*1.7);
-    }
+    
 
     function x_val_for_track_and_column(track, column) {
         return track * road_width + column * road_width/2 + 7/24 * road_width/2;
