@@ -30,6 +30,7 @@ $(document).ready(function(){
     var object_colors = {0:"Crimson", 1:"DeepSkyBlue"};
     var width, height, road_width, object_width;
     var car_prop = 0.8;
+    var click_to_restart_delay_ms = 1000;
 
     // game state
     // obstacles and states have the same structure:
@@ -39,7 +40,9 @@ $(document).ready(function(){
     // }
     // cars is an array of 2 car objects
     // speed is in units of screens per second
-    var obstacles, targets, cars, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, loop, collision, accel, score;
+    // start_time is when init is called, a Date object.
+    // end_time is when running becomes false, a Date object.
+    var obstacles, targets, cars, speed, min_distance_between_objects, obstacles_per_second, targets_per_second, running, accel, score, start_time, end_time;
 
     var update_ms = 16;
 
@@ -49,17 +52,14 @@ $(document).ready(function(){
         targets = [];
         cars = [{"cur_x":0, "intended_x":0}, {"cur_x":1, "intended_x":1}];
         speed = 0.4;
-        collision = false;
+        running = true;
         accel = 0.01
         min_distance_between_objects = 0.3;
         tracks_per_object = .6;
+        start_time = new Date();
+        end_time = null;
         generate_object(0);
         generate_object(1);
-
-        if (typeof loop === "undefined") {
-            clearInterval(loop);
-        }
-        loop = setInterval(function() {update(); render();}, update_ms);
     }
 
     function generate_object(track) {
@@ -100,80 +100,85 @@ $(document).ready(function(){
         }
     }
 
+    function gameLost() {
+        running = false;
+        end_time = new Date();
+        var events = 'click keydown touchstart';
+        var handler = function() {
+            if (new Date() - end_time > click_to_restart_delay_ms) {
+                $(document).off(events, handler);
+                init();
+            }
+        }
+        $(document).on(events, handler);
+    }
+
     function update() {
-        var min_y = [Infinity, Infinity];
-        _.each(obstacles, function(obstacle) {
-            update_y_proportion(obstacle);
-            min_y[obstacle.track] = Math.min(min_y[obstacle.track], obstacle.y_proportion);
-        });
-        _.each(targets, function(target) {
-            update_y_proportion(target);
-            min_y[target.track] = Math.min(min_y[target.track], target.y_proportion);
-        });
-        _.each(cars, function(car) {
-            update_car_position(car);
-        })
-        if (min_y[0] > 0) {
-            generate_object(0);
-        }
-        if (min_y[1] > 0) {
-            generate_object(1);
-        }
-
-        collision = false;
-        _.each(obstacles, function(obstacle) {
-            var car_x = cars[obstacle.track]["cur_x"] * width / 4;
-            var car_y = car_prop * height;
-            var obstacle_x = obstacle.column * width / 4;
-            var obstacle_y = obstacle.y_proportion * height;
-
-            var d = distance(car_x, car_y, obstacle_x, obstacle_y) 
-            if ( d < object_width/2){
-                collision = true;
+        if (running) {
+            var min_y = [Infinity, Infinity];
+            _.each(obstacles, function(obstacle) {
+                update_y_proportion(obstacle);
+                min_y[obstacle.track] = Math.min(min_y[obstacle.track], obstacle.y_proportion);
+            });
+            _.each(targets, function(target) {
+                update_y_proportion(target);
+                min_y[target.track] = Math.min(min_y[target.track], target.y_proportion);
+            });
+            _.each(cars, function(car) {
+                update_car_position(car);
+            })
+            if (min_y[0] > 0) {
+                generate_object(0);
             }
-        });
-
-        targets = _.filter(targets, function(target) {
-            var car_x = cars[target.track]["cur_x"] * width / 4;
-            var car_y = car_prop * height;
-            var target_x = target.column * width / 4;
-            var target_y = target.y_proportion * height;
-
-            var d = distance(car_x, car_y, target_x, target_y) 
-            if ( d < object_width/2 - 5){
-                score++;
-                return false;
+            if (min_y[1] > 0) {
+                generate_object(1);
             }
-            return true;
-        });
 
-        _.each(targets, function(target) {
+            _.each(obstacles, function(obstacle) {
+                var car_x = cars[obstacle.track]["cur_x"] * width / 4;
+                var car_y = car_prop * height;
+                var obstacle_x = obstacle.column * width / 4;
+                var obstacle_y = obstacle.y_proportion * height;
 
-            var target_y = target.y_proportion * height;
+                var d = distance(car_x, car_y, obstacle_x, obstacle_y) 
+                if ( d < object_width/2){
+                    gameLost();
+                }
+            });
 
-            if (height - target_y <= object_width/2) {
-                collision = true;
-            }
-        });
+            targets = _.filter(targets, function(target) {
+                var car_x = cars[target.track]["cur_x"] * width / 4;
+                var car_y = car_prop * height;
+                var target_x = target.column * width / 4;
+                var target_y = target.y_proportion * height;
 
-        speed += accel * update_ms / 1000;
+                var d = distance(car_x, car_y, target_x, target_y) 
+                if ( d < object_width/2 - 5){
+                    score++;
+                    return false;
+                }
+                return true;
+            });
 
-        if (collision) {
-            clearInterval(loop);
-            setTimeout(function() {
-                ctx.fillStyle = "Cornsilk";
-                ctx.font = "16px Arial";
-                ctx.fillText("Click to restart", width / 2, height * 1.1 / 2);
-                var restart = _.once(init);
-                $(document).one('click keydown touchstart', restart);
-            }, 1000);
+            _.each(targets, function(target) {
+
+                var target_y = target.y_proportion * height;
+
+                if (height - target_y <= object_width/2) {
+                    gameLost();
+                }
+            });
+
+            speed += accel * update_ms / 1000;
         }
     }
 
     function render()
     {
-        width = canvas.width;
-        height = canvas.height;
+        width = $(canvas).width();
+        height = $(canvas).height();
+        canvas.width = width;
+        canvas.height = height;
         if (height < width) {
             width = height;
         }
@@ -209,10 +214,14 @@ $(document).ready(function(){
 
         var score_text = "Score: " + score;
         ctx.fillStyle = "Cornsilk";
-        if (collision) {
+        if (!running) {
             ctx.font = "36px Arial";
             ctx.textAlign = "center";
             ctx.fillText(score_text, width / 2, height / 2);
+            if (new Date() - end_time > click_to_restart_delay_ms) {
+                ctx.font = "16px Arial";
+                ctx.fillText("Click to restart", width / 2, height * 1.1 / 2);
+            }
         } else {
             ctx.font = "16px Arial";
             ctx.textAlign = "left";
@@ -340,6 +349,10 @@ $(document).ready(function(){
     });
 
     init();
+    setInterval(function() {update(); render();}, update_ms);
+    $(window).resize(function() {
+        render();
+    });
 
     /**
      * Draws a rounded rectangle using the current state of the canvas.
@@ -389,10 +402,12 @@ $(document).ready(function(){
 html, body, canvas {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
 }
         </style>
     </head>
     <body>
-        <canvas width="370%" height="550%"></canvas>
+        <canvas></canvas>
     </body>
 </html>
